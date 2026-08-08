@@ -1,0 +1,19 @@
+{
+  "contract_version": "solo-empire.mlops.dataset.v1",
+  "dataset_id": "central-assistant-intent",
+  "dataset_version": "gold-v1",
+  "source_layer": "gold",
+  "source_kind": "data_lake",
+  "training_uri": "data/lake/gold/product=central-assistant/dataset=training",
+  "evaluation_uri": "data/lake/gold/product=central-assistant/dataset=evaluation",
+  "required_columns": ["id", "text", "label"],
+  "privacy": {
+    "class": "private",
+    "runtime_metrics_must_exclude": ["text", "raw_payload", "credentials"]
+  },
+  "read_policy": {
+    "format": ["json", "jsonl", "parquet"],
+    "local_only_until_provider_is_approved": true,
+    "fail_if_missing": true
+  }
+}

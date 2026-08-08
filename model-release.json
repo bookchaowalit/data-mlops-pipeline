@@ -1,0 +1,27 @@
+{
+  "contract_version": "solo-empire.mlops.release.v1",
+  "model_name": "solo-empire-central-assistant",
+  "model_version": "0.1.0",
+  "stage": "candidate",
+  "artifact": {
+    "type": "evaluation-fixture",
+    "uri": "fixture://infra/tests/fixtures/mlops/golden_predictions.json",
+    "sha256": "sha256:f0ad11ba059c220f93964308fb13b0066fb7f65019e30c212ee006e042728a64"
+  },
+  "evaluation": {
+    "dataset": "infra/tests/fixtures/mlops/golden_predictions.json",
+    "min_examples": 6,
+    "min_accuracy": 0.8,
+    "min_macro_f1": 0.75
+  },
+  "promotion": {
+    "mode": "manual",
+    "target_environments": ["dev", "staging", "production"],
+    "requires": [
+      "offline-evaluation",
+      "devsecops-gates",
+      "immutable-artifact-digest",
+      "human-approval"
+    ]
+  }
+}
