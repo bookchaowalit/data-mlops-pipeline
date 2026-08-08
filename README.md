@@ -2,6 +2,9 @@
 title: Central MLOps Contract
 description: Model release, local runtime, and evaluation contracts for the Solo Empire central pipeline
 status: phase-4-gold-activation-ready
+tags: [documentation, infra]
+created: 2026-08-08
+updated: 2026-08-08
 ---
 
 # Central MLOps Contract
