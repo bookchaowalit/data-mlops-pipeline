@@ -5,12 +5,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
+UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
+if str(UTILS_DIR) not in sys.path:
+    sys.path.insert(0, str(UTILS_DIR))
+from _env import PROJECT_ROOT  # noqa: E402
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DATASET_CONTRACT = "solo-empire.mlops.dataset.v1"
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".ndjson", ".parquet"}
 

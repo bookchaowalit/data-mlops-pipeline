@@ -11,6 +11,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
+UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
+if str(UTILS_DIR) not in sys.path:
+    sys.path.insert(0, str(UTILS_DIR))
+from _env import PROJECT_ROOT  # noqa: E402
+
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from mlops.model import load_model, predict, save_model, train_model
@@ -18,7 +23,6 @@ else:
     from .model import load_model, predict, save_model, train_model
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TRAINING = PROJECT_ROOT / "infra/tests/fixtures/mlops/training_examples.json"
 DEFAULT_EVALUATION = PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
 

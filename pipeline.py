@@ -5,12 +5,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
-if __package__ in {None, ""}:  # pragma: no cover - direct CLI support
-    import sys
+UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
+if str(UTILS_DIR) not in sys.path:
+    sys.path.insert(0, str(UTILS_DIR))
+from _env import PROJECT_ROOT  # noqa: E402
 
+if __package__ in {None, ""}:  # pragma: no cover - direct CLI support
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from mlops.evaluate import evaluate_manifest
     from mlops.dataset import load_dataset_contract, prepare_dataset_bundle
@@ -27,7 +31,6 @@ else:
     from .train import load_examples, train_release
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_TRAINING = PROJECT_ROOT / "infra/tests/fixtures/mlops/training_examples.json"
 DEFAULT_EVALUATION = PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
 TELEMETRY_CONTRACT = "solo-empire.ai-telemetry.v1"

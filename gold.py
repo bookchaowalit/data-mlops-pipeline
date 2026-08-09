@@ -8,9 +8,15 @@ import hashlib
 import json
 import os
 import re
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
+
+UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
+if str(UTILS_DIR) not in sys.path:
+    sys.path.insert(0, str(UTILS_DIR))
+from _env import PROJECT_ROOT  # noqa: E402
 
 try:
     from .dataset import DatasetContractError, _canonical_json, load_dataset_rows
@@ -21,7 +27,6 @@ except ImportError:  # pragma: no cover - exercised by direct CLI execution
     from mlops.dataset import DatasetContractError, _canonical_json, load_dataset_rows
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SAFE_VALUE = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 DATASET_CONTRACT = "solo-empire.mlops.dataset.v1"
 
