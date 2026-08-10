@@ -1,37 +1,58 @@
 ---
 title: Central MLOps Contract
 description: Model release, local runtime, and evaluation contracts for the Solo Empire central pipeline
-status: phase-4-gold-activation-ready
+status: local-promotion-evidence-ready
 tags: [documentation, infra]
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-10
 ---
 
 # Central MLOps Contract
 
-This directory is the repository-owned boundary for model release metadata. It
-does not contain model weights, prompts with private data, credentials, or a
-provider-specific training system.
+This directory is the repository-owned boundary for model release metadata and
+local promotion evidence. It does not contain provider credentials, private
+training rows from production systems, or a hosted deployment.
 
 The local contract is intentionally small and reproducible:
 
 ```text
-approved fixture or lake-backed dataset
+synthetic Gold fixture (versioned, no PII)
         -> local reference training
-        -> model artifact + prediction events
+        -> immutable model artifact + prediction events
         -> deterministic evaluation and drift gates
         -> local registry
         -> DevSecOps gates
-        -> manual promotion decision
+        -> manual promotion decision (fail closed)
 ```
 
-`model-release.json` is a candidate release manifest. The Phase 4 local
-pipeline can consume a versioned Gold/lake contract, records source and
-dataset digests in provenance, creates a digest-verified JSON artifact, and
-emits a non-mutating staging rehearsal. Hosted runtime telemetry, environment
-deployment, and human approval remain separate requirements.
+## Checked-in local evidence
 
-Run the gate from the repository root:
+| Path | Role |
+|---|---|
+| `artifacts/solo-empire-central-assistant/0.2.0/model.json` | Digest-verified naive-Bayes JSON artifact |
+| `artifacts/.../predictions.json` | Offline predictions used by the release gate |
+| `gold/synthetic-gold-v1/` | Deterministic synthetic Gold training/evaluation bundle |
+| `gold/synthetic-gold-v1/dataset-manifest.json` | Version, source hashes, lineage, privacy boundary |
+| `model-release.json` | Candidate release manifest referencing the real artifact |
+| `dataset-contract.json` | Integration point for the synthetic Gold package |
+
+`model-release.json` is a **candidate** release manifest. Offline evaluation may
+pass when the artifact digest and dataset lineage check out. That is **not**
+deployment eligibility. Promotion remains blocked until human approval,
+production-environment evidence, and a provisioned target exist. The repository
+never marks this candidate as production-ready by default.
+
+Privacy boundary for the synthetic Gold package:
+
+- `contains_pii: false`
+- `contains_credentials: false`
+- `contains_provider_payloads: false`
+- `boundary: synthetic-local-fixture-only`
+- not a production data-lake claim
+
+## Commands
+
+Run from the repository root:
 
 ```bash
 python3 infra/scripts/mlops/evaluate.py --json
@@ -52,21 +73,32 @@ python3 infra/scripts/mlops/pipeline.py \
   --output-dir "$(mktemp -d)" \
   --registry-dir "$(mktemp -d)" \
   --json
-python3 infra/scripts/mlops/serve.py --model /path/to/model.json --host 127.0.0.1 --port 8081
+python3 infra/scripts/mlops/serve.py --model infra/mlops/artifacts/solo-empire-central-assistant/0.2.0/model.json --host 127.0.0.1 --port 8081
 python3 infra/scripts/mlops/monitor.py --predictions /path/to/predictions.json --baseline /path/to/baseline.json --json
+python3 infra/tests/mlops/mlops_pipeline_test.py
 ```
 
-The local registry is a filesystem evidence boundary, not a hosted model
-registry. `dataset-contract.json` is the real-lake integration point; it must
-resolve to a Gold dataset containing `id`, `text`, and `label`. A hosted
-adapter can be added later behind the same manifest fields without making the
-central pipeline depend on a single ML vendor.
+## Limitations and next activation gate
 
-`gold.py` never auto-labels, overwrites an existing version, or stores source
-payloads in the manifest. It requires an operator approval ID and writes the
-normalized private Gold rows plus a versioned contract under the ignored
-`data/lake/` boundary. The checked-in
-`infra/self-hosted-stack/prometheus/mlops-targets.json` is intentionally empty;
-add a network-reachable serving target only after `serve.py` is running.
-The provisioned Grafana dashboard is `Solo Empire - MLOps Reference`; the
-Prometheus rules remain inactive while that target file is empty.
+What this lane proves today:
+
+- immutable local model artifact with verifiable SHA-256
+- synthetic Gold dataset version, source hashes, lineage, and privacy boundary
+- deterministic offline evaluation gate
+- fail-closed promotion without human approval or production evidence
+
+What remains blocked / not claimed:
+
+- hosted training, registry, or inference
+- production lake-backed labeled data
+- provider credentials or OpenAI-compatible generation as part of this release
+- automatic promotion, GitOps deploy, or cluster mutation
+- GPU runtime, vector DB, Redis, Kafka, or any new platform dependency
+
+Next activation gate before any staging/production claim:
+
+1. human approval ID recorded on the release manifest
+2. production-environment evidence (target contract, restore, budget, owner)
+3. staging environment provisioned with `deploymentEnabled` still gated
+4. DevSecOps gates green for the promotion candidate
+5. rollback target (previous digest + last-good evaluation) available

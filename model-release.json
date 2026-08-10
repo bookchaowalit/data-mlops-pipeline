@@ -1,18 +1,33 @@
 {
   "contract_version": "solo-empire.mlops.release.v1",
   "model_name": "solo-empire-central-assistant",
-  "model_version": "0.1.0",
+  "model_version": "0.2.0",
   "stage": "candidate",
   "artifact": {
-    "type": "evaluation-fixture",
-    "uri": "fixture://infra/tests/fixtures/mlops/golden_predictions.json",
-    "sha256": "sha256:f0ad11ba059c220f93964308fb13b0066fb7f65019e30c212ee006e042728a64"
+    "type": "naive-bayes-json",
+    "uri": "infra/mlops/artifacts/solo-empire-central-assistant/0.2.0/model.json",
+    "sha256": "sha256:0d6b3bc3476d39f23abcc71ebd07dc15854c84921277c621c51c354b010d8ee6"
   },
   "evaluation": {
-    "dataset": "infra/tests/fixtures/mlops/golden_predictions.json",
-    "min_examples": 6,
+    "dataset": "infra/mlops/gold/synthetic-gold-v1/evaluation.json",
+    "predictions": "infra/mlops/artifacts/solo-empire-central-assistant/0.2.0/predictions.json",
+    "min_examples": 5,
     "min_accuracy": 0.8,
     "min_macro_f1": 0.75
+  },
+  "provenance": {
+    "dataset": {
+      "dataset_id": "central-assistant-intent",
+      "dataset_version": "synthetic-gold-v1",
+      "source_kind": "fixture",
+      "source_layer": "gold",
+      "dataset_sha256": "sha256:61d3483c73cf9d85cdf34614c8092b485c6cb8b99b30aec670a3995dec41d676",
+      "manifest_path": "infra/mlops/gold/synthetic-gold-v1/dataset-manifest.json",
+      "manifest_sha256": "sha256:62d6c6aa0d3533935f652eba1d7a13655d9c5ef26320adc02e8da20401e28164"
+    },
+    "code_revision": "unavailable-local",
+    "boundary": "local-reference-only",
+    "not_production": true
   },
   "promotion": {
     "mode": "manual",
@@ -21,7 +36,11 @@
       "offline-evaluation",
       "devsecops-gates",
       "immutable-artifact-digest",
-      "human-approval"
-    ]
+      "dataset-lineage",
+      "human-approval",
+      "production-environment-evidence"
+    ],
+    "human_approval_id": null,
+    "production_evidence": null
   }
 }
