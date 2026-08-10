@@ -114,8 +114,12 @@ def train_release(
                 "offline-evaluation",
                 "runtime-dependency-audit",
                 "immutable-artifact-digest",
+                "dataset-lineage",
                 "human-approval",
+                "production-environment-evidence",
             ],
+            "human_approval_id": None,
+            "production_evidence": None,
         },
     }
     manifest_path.write_bytes(

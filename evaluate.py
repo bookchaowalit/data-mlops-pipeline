@@ -153,7 +153,9 @@ def evaluate_manifest(
 
     artifact_is_deployable = (
         artifact.get("type") not in {None, "evaluation-fixture", "contract-only"}
+        and bool(artifact_uri)
         and str(artifact.get("sha256") or "").startswith("sha256:")
+        and artifact_integrity
     )
     provenance = manifest.get("provenance")
     dataset_lineage_integrity = True
@@ -187,6 +189,40 @@ def evaluate_manifest(
         "dataset_lineage": dataset_lineage_integrity,
     }
     gate_passed = all(checks.values())
+
+    promotion = manifest.get("promotion") if isinstance(manifest.get("promotion"), dict) else {}
+    human_approval_id = promotion.get("human_approval_id")
+    production_evidence = promotion.get("production_evidence")
+    human_approval_present = bool(
+        isinstance(human_approval_id, str) and human_approval_id.strip()
+    )
+    production_evidence_present = bool(
+        isinstance(production_evidence, dict) and production_evidence
+    ) or bool(isinstance(production_evidence, str) and production_evidence.strip())
+
+    # Artifact eligibility is separate from environment promotion. A real
+    # digest-verified candidate may pass offline evaluation and still be
+    # blocked from any staging/production claim until human approval and
+    # production evidence are recorded explicitly on the release manifest.
+    promotion_blockers: list[str] = []
+    if not artifact_is_deployable:
+        if not artifact_uri or not artifact_path or not artifact_path.is_file():
+            promotion_blockers.append("model-artifact-missing")
+        elif not artifact_integrity:
+            promotion_blockers.append("model-artifact-digest-mismatch")
+        else:
+            promotion_blockers.append("real-immutable-model-artifact-digest-not-registered")
+    if not gate_passed:
+        promotion_blockers.append("offline-evaluation-failed")
+    if not human_approval_present:
+        promotion_blockers.append("human-approval-required")
+    if not production_evidence_present:
+        promotion_blockers.append("production-environment-evidence-missing")
+    if manifest.get("stage") == "production":
+        promotion_blockers.append("stage-must-not-claim-production-without-promotion-gate")
+
+    artifact_eligible = gate_passed and artifact_is_deployable
+    promotion_eligible = artifact_eligible and human_approval_present and production_evidence_present
 
     return {
         "contract_version": manifest["contract_version"],
@@ -236,10 +272,9 @@ def evaluate_manifest(
         },
         "checks": checks,
         "release_gate": "pass" if gate_passed else "fail",
-        "promotion_eligible": gate_passed and artifact_is_deployable,
-        "promotion_blockers": [
-            "real immutable model artifact digest is not registered"
-        ] if not artifact_is_deployable else [],
+        "artifact_eligible": artifact_eligible,
+        "promotion_eligible": promotion_eligible,
+        "promotion_blockers": promotion_blockers,
     }
 
 

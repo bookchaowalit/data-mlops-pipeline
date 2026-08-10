@@ -33,26 +33,51 @@ def staging_dry_run(
     if not isinstance(promotion, dict):
         raise StagingGateError("release manifest requires promotion metadata")
     targets = promotion.get("target_environments", [])
+    human_approval_id = promotion.get("human_approval_id")
+    production_evidence = promotion.get("production_evidence")
+    human_approval = bool(isinstance(human_approval_id, str) and human_approval_id.strip())
+    production_evidence_present = bool(
+        isinstance(production_evidence, dict) and production_evidence
+    ) or bool(isinstance(production_evidence, str) and production_evidence.strip())
+    artifact_eligible = (
+        evaluation.get("artifact_eligible") is True
+        or (
+            evaluation.get("promotion_eligible") is True
+            and evaluation.get("release_gate") == "pass"
+        )
+    )
     checks = {
         "release_gate_passed": evaluation.get("release_gate") == "pass",
-        "immutable_artifact_eligible": evaluation.get("promotion_eligible") is True,
+        "immutable_artifact_eligible": artifact_eligible,
         "registry_registered": registry.get("status") == "registered",
         "manual_promotion_mode": promotion.get("mode") == "manual",
         "staging_environment_provisioned": False,
-        "human_approval": False,
+        "human_approval": human_approval,
+        "production_environment_evidence": production_evidence_present,
         "staging_target_declared": "staging" in targets,
         "rollback_target_available": registry.get("rollback_target_available") is True,
+        "deployment_disabled": True,
     }
+    # Always fail closed for environment promotion until humans and production
+    # evidence exist. Local artifact eligibility never enables deployment.
     blockers = [
         "staging-environment-not-provisioned",
         "human-approval-required",
+        "production-environment-evidence-missing",
+        "deployment-disabled",
     ]
+    always_blocked = {
+        "staging_environment_provisioned",
+        "human_approval",
+        "production_environment_evidence",
+        "deployment_disabled",
+    }
     for name, passed in checks.items():
-        if not passed and name not in {"staging_environment_provisioned", "human_approval"}:
+        if not passed and name not in always_blocked:
             blockers.append(name.replace("_", "-") + "-failed")
     return {
         "environment": "staging",
-        "status": "blocked" if blockers else "ready-for-manual-approval",
+        "status": "blocked",
         "deployment_enabled": False,
         "promotion_action": "none",
         "checks": checks,
@@ -64,6 +89,7 @@ def staging_dry_run(
             "cluster_mutated": False,
             "gitops_changed": False,
             "secrets_read": False,
+            "production_claim_allowed": False,
         },
         "rollback": {
             "ready": registry.get("rollback_target_available") is True,
