@@ -1,0 +1,8 @@
+system_id: bookchaowalit/private/solo-mlops
+prefix: CARD
+brand: "MLOPS"
+subtitle: "Reference MLOps pipeline: dataset contract → train → evaluate → registry → serve → monitor"
+footer: "solo-mlops — Product Card"
+color: "#5f0f40"
+audience: internal
+tier: L0
