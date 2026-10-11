@@ -1,0 +1,29 @@
+name: MLOps Release Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mlops-evaluation:
+    name: MLOps Release Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Run MLOps unit tests
+        run: python3 infra/tests/mlops/mlops_pipeline_test.py
+      - name: Evaluate central candidate release
+        run: python3 infra/scripts/mlops/evaluate.py --json
+      - name: Run local MLOps vertical slice
+        run: |
+          release_dir="$(mktemp -d)"
+          registry_dir="$(mktemp -d)"
+          python3 infra/scripts/mlops/pipeline.py \
+            --output-dir "$release_dir" \
+            --registry-dir "$registry_dir" \
+            --json
