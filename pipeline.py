@@ -112,7 +112,7 @@ def run_pipeline(
         "telemetry": {
             "contract": TELEMETRY_CONTRACT,
             "status": "not_applicable",
-            "reason": "local reference model has no provider token usage; record real AI runs with infra/scripts/agent/telemetry.py",
+            "reason": "local reference model has no provider token usage; real AI run telemetry lives in solo-ai-gateway",
             "required_fields": [
                 "route", "provider", "model", "prompt_version", "input_tokens",
                 "output_tokens", "total_tokens", "token_budget", "latency_ms",
