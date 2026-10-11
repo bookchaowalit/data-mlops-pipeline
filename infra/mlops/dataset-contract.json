@@ -1,0 +1,30 @@
+{
+  "contract_version": "solo-empire.mlops.dataset.v1",
+  "dataset_id": "central-assistant-intent",
+  "dataset_version": "synthetic-gold-v1",
+  "source_layer": "gold",
+  "source_kind": "fixture",
+  "training_uri": "gold/synthetic-gold-v1/training.json",
+  "evaluation_uri": "gold/synthetic-gold-v1/evaluation.json",
+  "required_columns": ["id", "text", "label"],
+  "privacy": {
+    "class": "internal",
+    "contains_pii": false,
+    "contains_credentials": false,
+    "contains_provider_payloads": false,
+    "runtime_metrics_must_exclude": ["text", "raw_payload", "credentials"],
+    "boundary": "synthetic-local-fixture-only"
+  },
+  "lineage": {
+    "upstream": "infra/tests/fixtures/mlops/{training,evaluation}_examples.json",
+    "materialization": "infra/scripts/mlops/gold.py",
+    "purpose": "local-mlops-promotion-evidence",
+    "not_production_lake": true
+  },
+  "read_policy": {
+    "format": ["json", "jsonl", "parquet"],
+    "local_only_until_provider_is_approved": true,
+    "fail_if_missing": true
+  },
+  "notes": "Repository-owned synthetic Gold for local MLOps evidence. Not a claim of production lake data or production labels."
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "id": "eval-001",
+    "label": "general",
+    "prediction": "general"
+  },
+  {
+    "id": "eval-002",
+    "label": "action",
+    "prediction": "action"
+  },
+  {
+    "id": "eval-003",
+    "label": "finance",
+    "prediction": "finance"
+  },
+  {
+    "id": "eval-004",
+    "label": "work",
+    "prediction": "work"
+  },
+  {
+    "id": "eval-005",
+    "label": "newsletter",
+    "prediction": "newsletter"
+  }
+]
