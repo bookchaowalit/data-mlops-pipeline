@@ -1,0 +1,7 @@
+[
+  {"id": "eval-001", "text": "hello random note", "label": "general"},
+  {"id": "eval-002", "text": "urgent please reply", "label": "action"},
+  {"id": "eval-003", "text": "payment invoice", "label": "finance"},
+  {"id": "eval-004", "text": "client project", "label": "work"},
+  {"id": "eval-005", "text": "weekly newsletter", "label": "newsletter"}
+]

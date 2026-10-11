@@ -1,0 +1,12 @@
+[
+  {"id": "train-001", "text": "hello this is a general personal note", "label": "general"},
+  {"id": "train-002", "text": "random general message for review", "label": "general"},
+  {"id": "train-003", "text": "action required please reply now", "label": "action"},
+  {"id": "train-004", "text": "urgent follow up response needed", "label": "action"},
+  {"id": "train-005", "text": "invoice payment receipt transaction", "label": "finance"},
+  {"id": "train-006", "text": "payout statement and billing", "label": "finance"},
+  {"id": "train-007", "text": "client project proposal meeting", "label": "work"},
+  {"id": "train-008", "text": "contract work project delivery", "label": "work"},
+  {"id": "train-009", "text": "weekly newsletter update", "label": "newsletter"},
+  {"id": "train-010", "text": "promotion newsletter subscribe", "label": "newsletter"}
+]
