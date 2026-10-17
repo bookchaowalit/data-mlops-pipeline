@@ -79,8 +79,17 @@ def _looks_like_secret(key):
     """Identify credential-shaped env names without treating normal config as secrets."""
     name = key.upper()
     markers = (
-        "_TOKEN", "_SECRET", "_PASSWORD", "_PASS", "_API_KEY", "_ACCESS_KEY",
-        "_PRIVATE_KEY", "_WEBHOOK_URL", "_DATABASE_URL", "_CLIENT_ID", "_CHAT_ID",
+        "_TOKEN",
+        "_SECRET",
+        "_PASSWORD",
+        "_PASS",
+        "_API_KEY",
+        "_ACCESS_KEY",
+        "_PRIVATE_KEY",
+        "_WEBHOOK_URL",
+        "_DATABASE_URL",
+        "_CLIENT_ID",
+        "_CHAT_ID",
     )
     return any(name.endswith(marker) for marker in markers)
 
@@ -91,7 +100,9 @@ def get_env(key, default=None, required=False):
         return get_secret(key, default=default, required=required)
     value = os.environ.get(key, default)
     if required and not value:
-        raise ValueError(f"Required env var {key} is not set. Check infra/.env or infra/.env.example")
+        raise ValueError(
+            f"Required env var {key} is not set. Check infra/.env or infra/.env.example"
+        )
     return value
 
 
@@ -134,6 +145,7 @@ def get_cloudflare_token():
         return token
     # Fallback: try legacy Qwen settings
     import json
+
     settings_path = os.path.expanduser("~/.qwen/settings.json")
     if os.path.exists(settings_path):
         with open(settings_path) as f:

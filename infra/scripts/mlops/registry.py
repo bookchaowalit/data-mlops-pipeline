@@ -38,14 +38,18 @@ def _sha256(path: Path) -> str:
 
 def _atomic_write(path: Path, content: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as handle:
+    with tempfile.NamedTemporaryFile(
+        dir=path.parent, prefix=f".{path.name}.", delete=False
+    ) as handle:
         temporary = Path(handle.name)
         handle.write(content)
     os.replace(temporary, path)
 
 
 def _canonical_json(value: Any) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    ).encode("utf-8")
 
 
 def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
@@ -59,7 +63,9 @@ def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
     model_name = str(manifest.get("model_name") or "")
     model_version = str(manifest.get("model_version") or "")
     if not NAME_RE.fullmatch(model_name) or not NAME_RE.fullmatch(model_version):
-        raise RegistryError("model name and version must contain only safe path characters")
+        raise RegistryError(
+            "model name and version must contain only safe path characters"
+        )
     artifact = manifest.get("artifact")
     if not isinstance(artifact, dict):
         raise RegistryError("manifest requires an artifact object")
@@ -84,7 +90,10 @@ def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
     registered_manifest = json.loads(json.dumps(manifest))
     registered_manifest["artifact"]["uri"] = str(model_destination)
     manifest_bytes = _canonical_json(registered_manifest)
-    if manifest_destination.exists() and manifest_destination.read_bytes() != manifest_bytes:
+    if (
+        manifest_destination.exists()
+        and manifest_destination.read_bytes() != manifest_bytes
+    ):
         raise RegistryError(f"registry conflict: {manifest_destination}")
 
     if not model_destination.exists():
@@ -96,7 +105,9 @@ def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
     index: dict[str, Any] = {"format": "solo-empire.local-registry.v1", "models": []}
     if index_path.exists():
         loaded_index = _load_json(index_path)
-        if not isinstance(loaded_index, dict) or not isinstance(loaded_index.get("models"), list):
+        if not isinstance(loaded_index, dict) or not isinstance(
+            loaded_index.get("models"), list
+        ):
             raise RegistryError("registry index is invalid")
         index = loaded_index
     entries = [entry for entry in index["models"] if isinstance(entry, dict)]
@@ -109,11 +120,18 @@ def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
         "status": "registered",
     }
     entries = [
-        existing for existing in entries
-        if not (existing.get("model_name") == model_name and existing.get("model_version") == model_version)
+        existing
+        for existing in entries
+        if not (
+            existing.get("model_name") == model_name
+            and existing.get("model_version") == model_version
+        )
     ]
     entries.append(entry)
-    index["models"] = sorted(entries, key=lambda item: (str(item.get("model_name")), str(item.get("model_version"))))
+    index["models"] = sorted(
+        entries,
+        key=lambda item: (str(item.get("model_name")), str(item.get("model_version"))),
+    )
     _atomic_write(index_path, _canonical_json(index))
     registered_versions = [
         str(item.get("model_version"))
@@ -128,12 +146,16 @@ def register_model(manifest_path: Path, registry_dir: Path) -> dict[str, Any]:
         "registry_path": str(model_destination),
         "index_path": str(index_path),
         "registered_versions": registered_versions,
-        "rollback_target_available": any(version != model_version for version in registered_versions),
+        "rollback_target_available": any(
+            version != model_version for version in registered_versions
+        ),
     }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Register a local MLOps model artifact")
+    parser = argparse.ArgumentParser(
+        description="Register a local MLOps model artifact"
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
     register_parser = subparsers.add_parser("register")
     register_parser.add_argument("--manifest", type=Path, required=True)

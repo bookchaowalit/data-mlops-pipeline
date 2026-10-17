@@ -35,16 +35,15 @@ def staging_dry_run(
     targets = promotion.get("target_environments", [])
     human_approval_id = promotion.get("human_approval_id")
     production_evidence = promotion.get("production_evidence")
-    human_approval = bool(isinstance(human_approval_id, str) and human_approval_id.strip())
+    human_approval = bool(
+        isinstance(human_approval_id, str) and human_approval_id.strip()
+    )
     production_evidence_present = bool(
         isinstance(production_evidence, dict) and production_evidence
     ) or bool(isinstance(production_evidence, str) and production_evidence.strip())
-    artifact_eligible = (
-        evaluation.get("artifact_eligible") is True
-        or (
-            evaluation.get("promotion_eligible") is True
-            and evaluation.get("release_gate") == "pass"
-        )
+    artifact_eligible = evaluation.get("artifact_eligible") is True or (
+        evaluation.get("promotion_eligible") is True
+        and evaluation.get("release_gate") == "pass"
     )
     checks = {
         "release_gate_passed": evaluation.get("release_gate") == "pass",
@@ -105,7 +104,9 @@ def staging_dry_run(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a non-mutating staging promotion rehearsal")
+    parser = argparse.ArgumentParser(
+        description="Run a non-mutating staging promotion rehearsal"
+    )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--evaluation", type=Path, required=True)
     parser.add_argument("--registry", type=Path)
@@ -114,13 +115,21 @@ def main() -> int:
     args = parser.parse_args()
     try:
         evaluation = _load_json(args.evaluation.resolve())
-        registry = _load_json(args.registry.resolve()) if args.registry else {"status": "not-registered"}
+        registry = (
+            _load_json(args.registry.resolve())
+            if args.registry
+            else {"status": "not-registered"}
+        )
         if not isinstance(evaluation, dict) or not isinstance(registry, dict):
-            raise StagingGateError("evaluation and registry evidence must be JSON objects")
+            raise StagingGateError(
+                "evaluation and registry evidence must be JSON objects"
+            )
         result = staging_dry_run(args.manifest.resolve(), evaluation, registry)
     except StagingGateError as exc:
         result = {"status": "error", "error": str(exc)}
-    rendered = json.dumps(result, ensure_ascii=False, indent=None if args.json else 2) + "\n"
+    rendered = (
+        json.dumps(result, ensure_ascii=False, indent=None if args.json else 2) + "\n"
+    )
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(rendered, encoding="utf-8")

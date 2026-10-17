@@ -68,7 +68,11 @@ def monitor_predictions(
 
     labeled_rows = [row for row in current_rows if str(row.get("label") or "")]
     accuracy = (
-        round(sum(str(row["label"]) == str(row["prediction"]) for row in labeled_rows) / len(labeled_rows), 6)
+        round(
+            sum(str(row["label"]) == str(row["prediction"]) for row in labeled_rows)
+            / len(labeled_rows),
+            6,
+        )
         if labeled_rows
         else None
     )

@@ -23,7 +23,9 @@ def tokenize(text: str) -> list[str]:
     return [token.casefold() for token in TOKEN_RE.findall(text)]
 
 
-def _validate_examples(rows: list[dict[str, Any]], *, require_text: bool = True) -> None:
+def _validate_examples(
+    rows: list[dict[str, Any]], *, require_text: bool = True
+) -> None:
     if not rows:
         raise ValueError("training/evaluation examples cannot be empty")
     seen: set[str] = set()
@@ -102,7 +104,10 @@ def predict(model: dict[str, Any], text: str) -> tuple[str, dict[str, float]]:
 
 
 def canonical_json(value: Any) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
 
 
 def save_model(model: dict[str, Any], path: Path) -> None:
