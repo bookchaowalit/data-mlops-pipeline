@@ -16,7 +16,7 @@ from typing import Any
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT  # noqa: F401 - imported for its side effect: _env loads infra/.env on import
 
 try:
     from .dataset import DatasetContractError, _canonical_json, load_dataset_rows
@@ -41,7 +41,9 @@ def _write(path: Path, value: Any) -> None:
 
 def _validate_value(name: str, value: str) -> str:
     if not SAFE_VALUE.fullmatch(value):
-        raise GoldActivationError(f"{name} must contain only safe approval/path characters")
+        raise GoldActivationError(
+            f"{name} must contain only safe approval/path characters"
+        )
     return value
 
 
@@ -62,10 +64,14 @@ def materialize_gold_dataset(
     approval_id = _validate_value("approval_id", approval_id)
     source_system = _validate_value("source_system", source_system)
     if privacy_class not in {"internal", "private", "restricted"}:
-        raise GoldActivationError("Gold datasets must be internal, private, or restricted")
+        raise GoldActivationError(
+            "Gold datasets must be internal, private, or restricted"
+        )
 
     training_rows, training_evidence = load_dataset_rows(training_source.resolve())
-    evaluation_rows, evaluation_evidence = load_dataset_rows(evaluation_source.resolve())
+    evaluation_rows, evaluation_evidence = load_dataset_rows(
+        evaluation_source.resolve()
+    )
     training_ids = {row["id"] for row in training_rows}
     evaluation_ids = {row["id"] for row in evaluation_rows}
     overlap = training_ids & evaluation_ids
@@ -76,7 +82,9 @@ def materialize_gold_dataset(
     if len(training_labels) < 2:
         raise GoldActivationError("Gold training data must contain at least two labels")
     if not evaluation_labels.issubset(training_labels):
-        raise GoldActivationError("evaluation labels must be present in training labels")
+        raise GoldActivationError(
+            "evaluation labels must be present in training labels"
+        )
 
     output_root = output_root.resolve()
     output_root.parent.mkdir(parents=True, exist_ok=True)
@@ -106,11 +114,15 @@ def materialize_gold_dataset(
             "training_sha256": f"sha256:{hashlib.sha256(training_bytes).hexdigest()}",
             "evaluation_sha256": f"sha256:{hashlib.sha256(evaluation_bytes).hexdigest()}",
             "dataset_sha256": f"sha256:{dataset_digest}",
-            "created_by": os.environ.get("GITHUB_SHA") or os.environ.get("GIT_COMMIT") or "unavailable-local",
+            "created_by": os.environ.get("GITHUB_SHA")
+            or os.environ.get("GIT_COMMIT")
+            or "unavailable-local",
         },
     }
 
-    with tempfile.TemporaryDirectory(prefix="solo-empire-gold-", dir=output_root.parent) as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="solo-empire-gold-", dir=output_root.parent
+    ) as temp_dir:
         temporary = Path(temp_dir)
         _write(temporary / "training.json", training_rows)
         _write(temporary / "evaluation.json", evaluation_rows)
@@ -118,10 +130,16 @@ def materialize_gold_dataset(
         if output_root.exists():
             expected = {
                 name: (temporary / name).read_bytes()
-                for name in ("training.json", "evaluation.json", "dataset-contract.json")
+                for name in (
+                    "training.json",
+                    "evaluation.json",
+                    "dataset-contract.json",
+                )
             }
             actual = {
-                name: (output_root / name).read_bytes() if (output_root / name).is_file() else None
+                name: (output_root / name).read_bytes()
+                if (output_root / name).is_file()
+                else None
                 for name in expected
             }
             if all(actual[name] == data for name, data in expected.items()):
@@ -133,7 +151,9 @@ def materialize_gold_dataset(
                     "contract_path": str(output_root / "dataset-contract.json"),
                     "dataset_sha256": f"sha256:{dataset_digest}",
                 }
-            raise GoldActivationError(f"Gold dataset conflict; refusing to overwrite: {output_root}")
+            raise GoldActivationError(
+                f"Gold dataset conflict; refusing to overwrite: {output_root}"
+            )
         temporary.replace(output_root)
 
     return {
@@ -149,7 +169,9 @@ def materialize_gold_dataset(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Materialize an approved MLOps Gold dataset")
+    parser = argparse.ArgumentParser(
+        description="Materialize an approved MLOps Gold dataset"
+    )
     parser.add_argument("--training-source", type=Path, required=True)
     parser.add_argument("--evaluation-source", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
@@ -157,7 +179,11 @@ def main() -> int:
     parser.add_argument("--dataset-version", required=True)
     parser.add_argument("--approval-id", required=True)
     parser.add_argument("--source-system", default="operator-approved")
-    parser.add_argument("--privacy-class", choices=["internal", "private", "restricted"], default="private")
+    parser.add_argument(
+        "--privacy-class",
+        choices=["internal", "private", "restricted"],
+        default="private",
+    )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     try:

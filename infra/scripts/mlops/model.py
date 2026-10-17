@@ -14,7 +14,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 MODEL_FORMAT = "solo-empire.naive-bayes-json.v1"
 
@@ -23,13 +22,15 @@ def tokenize(text: str) -> list[str]:
     return [token.casefold() for token in TOKEN_RE.findall(text)]
 
 
-def _validate_examples(rows: list[dict[str, Any]], *, require_text: bool = True) -> None:
+def _validate_examples(
+    rows: list[dict[str, Any]], *, require_text: bool = True
+) -> None:
     if not rows:
         raise ValueError("training/evaluation examples cannot be empty")
     seen: set[str] = set()
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
-            raise ValueError(f"example {index} is not an object")
+            raise ValueError(f"example {index} is not an object")  # noqa: TRY004 - invalid input data, not a programming error; callers handle ValueError
         required = ("id", "label", "text") if require_text else ("id", "label")
         missing = [field for field in required if not str(row.get(field) or "").strip()]
         if missing:
@@ -102,7 +103,10 @@ def predict(model: dict[str, Any], text: str) -> tuple[str, dict[str, float]]:
 
 
 def canonical_json(value: Any) -> bytes:
-    return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
 
 
 def save_model(model: dict[str, Any], path: Path) -> None:
@@ -113,5 +117,5 @@ def save_model(model: dict[str, Any], path: Path) -> None:
 def load_model(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
-        raise ValueError("model artifact must be a JSON object")
+        raise ValueError("model artifact must be a JSON object")  # noqa: TRY004 - invalid input data, not a programming error; callers handle ValueError
     return value

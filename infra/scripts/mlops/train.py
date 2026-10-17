@@ -7,14 +7,14 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -24,13 +24,15 @@ else:
 
 
 DEFAULT_TRAINING = PROJECT_ROOT / "infra/tests/fixtures/mlops/training_examples.json"
-DEFAULT_EVALUATION = PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
+DEFAULT_EVALUATION = (
+    PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
+)
 
 
 def load_examples(path: Path) -> list[dict[str, Any]]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, list):
-        raise ValueError(f"examples must be a JSON list: {path}")
+        raise ValueError(f"examples must be a JSON list: {path}")  # noqa: TRY004 - invalid input data, not a programming error; callers handle ValueError
     return value
 
 
@@ -64,11 +66,13 @@ def train_release(
     predictions = []
     for row in evaluation_rows:
         prediction, _scores = predict(loaded_model, str(row["text"]))
-        predictions.append({
-            "id": str(row["id"]),
-            "label": str(row["label"]),
-            "prediction": prediction,
-        })
+        predictions.append(
+            {
+                "id": str(row["id"]),
+                "label": str(row["label"]),
+                "prediction": prediction,
+            }
+        )
     predictions_path.write_text(
         json.dumps(predictions, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
@@ -92,7 +96,8 @@ def train_release(
             "min_macro_f1": 0.75,
         },
         "provenance": {
-            "dataset": dataset_lineage or {
+            "dataset": dataset_lineage
+            or {
                 "dataset_id": "unversioned-fixture",
                 "dataset_version": "fixture",
                 "source_kind": "fixture",
@@ -123,7 +128,9 @@ def train_release(
         },
     }
     manifest_path.write_bytes(
-        (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+        (
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+        ).encode("utf-8")
     )
     return {
         "model_path": str(model_path),
@@ -136,10 +143,14 @@ def train_release(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Train the local MLOps reference model")
+    parser = argparse.ArgumentParser(
+        description="Train the local MLOps reference model"
+    )
     parser.add_argument("--training", type=Path, default=DEFAULT_TRAINING)
     parser.add_argument("--evaluation", type=Path, default=DEFAULT_EVALUATION)
-    parser.add_argument("--output-dir", type=Path, default=Path("/tmp/solo-empire-mlops-release"))
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("/tmp/solo-empire-mlops-release")
+    )
     parser.add_argument("--model-name", default="solo-empire-central-assistant")
     parser.add_argument("--model-version", default="0.2.0")
     parser.add_argument("--json", action="store_true")

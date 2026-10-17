@@ -31,7 +31,9 @@ def _metadata(model: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTPServer:
+def create_server(
+    model_path: Path, host: str = "127.0.0.1", port: int = 0
+) -> ThreadingHTTPServer:
     model = load_model(model_path.resolve())
     counters = {"requests": 0, "predictions": 0, "errors": 0}
 
@@ -42,7 +44,9 @@ def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> T
         server_version = "SoloEmpireMLops/1"
 
         def _send_json(self, status: int, payload: dict[str, Any]) -> None:
-            body = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+            body = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode(
+                "utf-8"
+            )
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -67,14 +71,14 @@ def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> T
                 "# HELP solo_empire_mlops_model_info Loaded model metadata.\n"
                 "# TYPE solo_empire_mlops_model_info gauge\n"
                 f"solo_empire_mlops_model_info{{{labels}}} 1\n"
-            ).encode("utf-8")
+            ).encode()
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
 
-        def do_GET(self) -> None:  # noqa: N802
+        def do_GET(self) -> None:
             if self.path == "/healthz":
                 self._send_json(200, {"status": "ok"})
             elif self.path == "/readyz":
@@ -86,7 +90,7 @@ def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> T
             else:
                 self._send_json(404, {"error": "not found"})
 
-        def do_POST(self) -> None:  # noqa: N802
+        def do_POST(self) -> None:
             counters["requests"] += 1
             if self.path != "/predict":
                 counters["errors"] += 1
@@ -102,7 +106,9 @@ def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> T
                 return
             try:
                 payload = json.loads(self.rfile.read(length))
-                text = str(payload.get("text") or "") if isinstance(payload, dict) else ""
+                text = (
+                    str(payload.get("text") or "") if isinstance(payload, dict) else ""
+                )
                 if not text.strip():
                     raise ValueError("text is required")
                 prediction, scores = predict(model, text)
@@ -111,11 +117,17 @@ def create_server(model_path: Path, host: str = "127.0.0.1", port: int = 0) -> T
                 self._send_json(400, {"error": str(exc)})
                 return
             counters["predictions"] += 1
-            self._send_json(200, {
-                **_metadata(model),
-                "prediction": prediction,
-                "scores": {label: round(score, 6) for label, score in sorted(scores.items())},
-            })
+            self._send_json(
+                200,
+                {
+                    **_metadata(model),
+                    "prediction": prediction,
+                    "scores": {
+                        label: round(score, 6)
+                        for label, score in sorted(scores.items())
+                    },
+                },
+            )
 
         def log_message(self, _format: str, *_args: Any) -> None:
             # Do not emit request paths or payload-adjacent data by default.
@@ -133,7 +145,12 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=8081)
     args = parser.parse_args()
     server = create_server(args.model, args.host, args.port)
-    print(json.dumps({"status": "listening", "host": args.host, "port": server.server_address[1]}), flush=True)
+    print(
+        json.dumps(
+            {"status": "listening", "host": args.host, "port": server.server_address[1]}
+        ),
+        flush=True,
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:

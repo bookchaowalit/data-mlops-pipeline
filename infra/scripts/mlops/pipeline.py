@@ -12,12 +12,12 @@ from typing import Any
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 if __package__ in {None, ""}:  # pragma: no cover - direct CLI support
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from mlops.evaluate import evaluate_manifest
     from mlops.dataset import load_dataset_contract, prepare_dataset_bundle
+    from mlops.evaluate import evaluate_manifest
     from mlops.monitor import monitor_predictions
     from mlops.registry import register_model
     from mlops.staging import staging_dry_run
@@ -32,13 +32,18 @@ else:
 
 
 DEFAULT_TRAINING = PROJECT_ROOT / "infra/tests/fixtures/mlops/training_examples.json"
-DEFAULT_EVALUATION = PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
+DEFAULT_EVALUATION = (
+    PROJECT_ROOT / "infra/tests/fixtures/mlops/evaluation_examples.json"
+)
 TELEMETRY_CONTRACT = "solo-empire.ai-telemetry.v1"
 
 
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def run_pipeline(
@@ -90,13 +95,17 @@ def run_pipeline(
     ]
     baseline_path = output_dir / "baseline_predictions.json"
     _write_json(baseline_path, baseline_rows)
-    current_rows = json.loads(Path(trained["predictions_path"]).read_text(encoding="utf-8"))
+    current_rows = json.loads(
+        Path(trained["predictions_path"]).read_text(encoding="utf-8")
+    )
     monitoring = monitor_predictions(current_rows, baseline_rows)
     monitoring_report_path = output_dir / "monitoring-report.json"
     _write_json(monitoring_report_path, monitoring)
 
     if evaluation.get("release_gate") == "pass" and registry_dir is not None:
-        registry = register_model(Path(trained["manifest_path"]), registry_dir.resolve())
+        registry = register_model(
+            Path(trained["manifest_path"]), registry_dir.resolve()
+        )
     else:
         registry = {
             "status": "skipped",
@@ -105,7 +114,12 @@ def run_pipeline(
     staging = staging_dry_run(Path(trained["manifest_path"]), evaluation, registry)
     staging_report_path = output_dir / "staging-dry-run.json"
     _write_json(staging_report_path, staging)
-    status = "pass" if evaluation.get("release_gate") == "pass" and monitoring.get("drift_status") == "pass" else "fail"
+    status = (
+        "pass"
+        if evaluation.get("release_gate") == "pass"
+        and monitoring.get("drift_status") == "pass"
+        else "fail"
+    )
     return {
         "status": status,
         "promotion_mode": "manual",
@@ -114,9 +128,18 @@ def run_pipeline(
             "status": "not_applicable",
             "reason": "local reference model has no provider token usage; real AI run telemetry lives in solo-ai-gateway",
             "required_fields": [
-                "route", "provider", "model", "prompt_version", "input_tokens",
-                "output_tokens", "total_tokens", "token_budget", "latency_ms",
-                "estimated_cost_usd", "cache_hit", "status",
+                "route",
+                "provider",
+                "model",
+                "prompt_version",
+                "input_tokens",
+                "output_tokens",
+                "total_tokens",
+                "token_budget",
+                "latency_ms",
+                "estimated_cost_usd",
+                "cache_hit",
+                "status",
             ],
         },
         "dataset": dataset,
@@ -137,8 +160,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run the local central MLOps pipeline")
     parser.add_argument("--training", type=Path, default=DEFAULT_TRAINING)
     parser.add_argument("--evaluation", type=Path, default=DEFAULT_EVALUATION)
-    parser.add_argument("--dataset-manifest", type=Path, help="Versioned Gold/lake dataset contract")
-    parser.add_argument("--output-dir", type=Path, default=Path("/tmp/solo-empire-mlops-release"))
+    parser.add_argument(
+        "--dataset-manifest", type=Path, help="Versioned Gold/lake dataset contract"
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("/tmp/solo-empire-mlops-release")
+    )
     parser.add_argument("--registry-dir", type=Path)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

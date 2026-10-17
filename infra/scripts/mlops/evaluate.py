@@ -20,7 +20,7 @@ from urllib.parse import unquote, urlparse
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 DEFAULT_MANIFEST = PROJECT_ROOT / "infra" / "mlops" / "model-release.json"
 
@@ -70,7 +70,9 @@ def _predictions(path: Path) -> list[dict[str, str]]:
     for index, row in enumerate(value):
         if not isinstance(row, dict):
             raise MLOpsContractError(f"prediction row {index} is not an object")
-        missing = [field for field in ("id", "label", "prediction") if not row.get(field)]
+        missing = [
+            field for field in ("id", "label", "prediction") if not row.get(field)
+        ]
         if missing:
             raise MLOpsContractError(
                 f"prediction row {index} is missing: {', '.join(missing)}"
@@ -79,16 +81,20 @@ def _predictions(path: Path) -> list[dict[str, str]]:
         if row_id in seen_ids:
             raise MLOpsContractError(f"duplicate prediction id: {row_id}")
         seen_ids.add(row_id)
-        rows.append({
-            "id": row_id,
-            "label": str(row["label"]),
-            "prediction": str(row["prediction"]),
-        })
+        rows.append(
+            {
+                "id": row_id,
+                "label": str(row["label"]),
+                "prediction": str(row["prediction"]),
+            }
+        )
     return rows
 
 
 def _f1_scores(rows: list[dict[str, str]]) -> dict[str, float]:
-    labels = sorted({row["label"] for row in rows} | {row["prediction"] for row in rows})
+    labels = sorted(
+        {row["label"] for row in rows} | {row["prediction"] for row in rows}
+    )
     scores: dict[str, float] = {}
     for label in labels:
         true_positive = sum(
@@ -99,9 +105,7 @@ def _f1_scores(rows: list[dict[str, str]]) -> dict[str, float]:
         precision = true_positive / predicted if predicted else 0.0
         recall = true_positive / actual if actual else 0.0
         scores[label] = (
-            2 * precision * recall / (precision + recall)
-            if precision + recall
-            else 0.0
+            2 * precision * recall / (precision + recall) if precision + recall else 0.0
         )
     return scores
 
@@ -144,7 +148,9 @@ def evaluate_manifest(
     artifact_digest = str(artifact.get("sha256") or "")
     artifact_type = str(artifact.get("type") or "")
     artifact_path = _resolve_artifact_path(artifact_uri) if artifact_uri else None
-    artifact_actual_digest = _sha256(artifact_path) if artifact_path and artifact_path.is_file() else None
+    artifact_actual_digest = (
+        _sha256(artifact_path) if artifact_path and artifact_path.is_file() else None
+    )
     artifact_integrity = (
         artifact_digest.startswith("sha256:")
         and artifact_path is not None
@@ -167,17 +173,24 @@ def evaluate_manifest(
             dataset_lineage_integrity = False
             if lineage_manifest_path.is_file():
                 lineage_manifest = _load_json(lineage_manifest_path)
-                declared_manifest_digest = str(dataset_lineage.get("manifest_sha256") or "")
+                declared_manifest_digest = str(
+                    dataset_lineage.get("manifest_sha256") or ""
+                )
                 manifest_digest_matches = (
                     not declared_manifest_digest
-                    or declared_manifest_digest == f"sha256:{_sha256(lineage_manifest_path)}"
+                    or declared_manifest_digest
+                    == f"sha256:{_sha256(lineage_manifest_path)}"
                 )
                 dataset_lineage_integrity = (
                     isinstance(lineage_manifest, dict)
-                    and lineage_manifest.get("contract_version") == "solo-empire.mlops.dataset.v1"
-                    and lineage_manifest.get("dataset_id") == dataset_lineage.get("dataset_id")
-                    and lineage_manifest.get("dataset_version") == dataset_lineage.get("dataset_version")
-                    and lineage_manifest.get("dataset_sha256") == dataset_lineage.get("dataset_sha256")
+                    and lineage_manifest.get("contract_version")
+                    == "solo-empire.mlops.dataset.v1"
+                    and lineage_manifest.get("dataset_id")
+                    == dataset_lineage.get("dataset_id")
+                    and lineage_manifest.get("dataset_version")
+                    == dataset_lineage.get("dataset_version")
+                    and lineage_manifest.get("dataset_sha256")
+                    == dataset_lineage.get("dataset_sha256")
                     and manifest_digest_matches
                 )
 
@@ -190,7 +203,9 @@ def evaluate_manifest(
     }
     gate_passed = all(checks.values())
 
-    promotion = manifest.get("promotion") if isinstance(manifest.get("promotion"), dict) else {}
+    promotion = (
+        manifest.get("promotion") if isinstance(manifest.get("promotion"), dict) else {}
+    )
     human_approval_id = promotion.get("human_approval_id")
     production_evidence = promotion.get("production_evidence")
     human_approval_present = bool(
@@ -211,7 +226,9 @@ def evaluate_manifest(
         elif not artifact_integrity:
             promotion_blockers.append("model-artifact-digest-mismatch")
         else:
-            promotion_blockers.append("real-immutable-model-artifact-digest-not-registered")
+            promotion_blockers.append(
+                "real-immutable-model-artifact-digest-not-registered"
+            )
     if not gate_passed:
         promotion_blockers.append("offline-evaluation-failed")
     if not human_approval_present:
@@ -219,10 +236,14 @@ def evaluate_manifest(
     if not production_evidence_present:
         promotion_blockers.append("production-environment-evidence-missing")
     if manifest.get("stage") == "production":
-        promotion_blockers.append("stage-must-not-claim-production-without-promotion-gate")
+        promotion_blockers.append(
+            "stage-must-not-claim-production-without-promotion-gate"
+        )
 
     artifact_eligible = gate_passed and artifact_is_deployable
-    promotion_eligible = artifact_eligible and human_approval_present and production_evidence_present
+    promotion_eligible = (
+        artifact_eligible and human_approval_present and production_evidence_present
+    )
 
     return {
         "contract_version": manifest["contract_version"],
@@ -241,7 +262,9 @@ def evaluate_manifest(
             "path": (
                 str(artifact_path.relative_to(PROJECT_ROOT))
                 if artifact_path and artifact_path.is_relative_to(PROJECT_ROOT)
-                else str(artifact_path) if artifact_path else None
+                else str(artifact_path)
+                if artifact_path
+                else None
             ),
             "declared_sha256": artifact_digest,
             "actual_sha256": f"sha256:{artifact_actual_digest}"
@@ -252,7 +275,8 @@ def evaluate_manifest(
             "status": "pass" if dataset_lineage_integrity else "fail",
             "manifest_path": (
                 str(provenance.get("dataset", {}).get("manifest_path"))
-                if isinstance(provenance, dict) and isinstance(provenance.get("dataset"), dict)
+                if isinstance(provenance, dict)
+                and isinstance(provenance.get("dataset"), dict)
                 else None
             ),
         },
