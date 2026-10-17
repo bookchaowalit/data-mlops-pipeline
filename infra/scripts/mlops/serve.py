@@ -71,14 +71,14 @@ def create_server(
                 "# HELP solo_empire_mlops_model_info Loaded model metadata.\n"
                 "# TYPE solo_empire_mlops_model_info gauge\n"
                 f"solo_empire_mlops_model_info{{{labels}}} 1\n"
-            ).encode("utf-8")
+            ).encode()
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
 
-        def do_GET(self) -> None:  # noqa: N802
+        def do_GET(self) -> None:
             if self.path == "/healthz":
                 self._send_json(200, {"status": "ok"})
             elif self.path == "/readyz":
@@ -90,7 +90,7 @@ def create_server(
             else:
                 self._send_json(404, {"error": "not found"})
 
-        def do_POST(self) -> None:  # noqa: N802
+        def do_POST(self) -> None:
             counters["requests"] += 1
             if self.path != "/predict":
                 counters["errors"] += 1

@@ -16,7 +16,7 @@ from typing import Any
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT  # noqa: F401 - imported for its side effect: _env loads infra/.env on import
 
 try:
     from .dataset import DatasetContractError, _canonical_json, load_dataset_rows

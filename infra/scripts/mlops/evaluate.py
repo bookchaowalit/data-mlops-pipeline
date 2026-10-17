@@ -20,7 +20,7 @@ from urllib.parse import unquote, urlparse
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 DEFAULT_MANIFEST = PROJECT_ROOT / "infra" / "mlops" / "model-release.json"
 

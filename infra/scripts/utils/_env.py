@@ -108,7 +108,8 @@ def get_env(key, default=None, required=False):
 
 def get_secret(key, default=None, required=False):
     """Resolve a secret from the configured runtime provider or env fallback."""
-    from secret_resolver import SecretUnavailable, get_secret as resolve_secret
+    from secret_resolver import SecretUnavailable
+    from secret_resolver import get_secret as resolve_secret
 
     try:
         value = resolve_secret(key, default=default, required=required)

@@ -18,15 +18,14 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from functools import lru_cache
 from pathlib import Path
-import sys
 from typing import Any
-
 
 DEFAULT_INFISICAL_PROJECT_ID = "d0d84520-c3d0-48da-980c-a987c3077122"
 DEFAULT_INFISICAL_SECRET_PATH = "/google"
@@ -613,9 +612,9 @@ def probe_secrets(names: tuple[str, ...] | list[str] | None = None) -> dict[str,
         overall = STATUS_AUTHENTICATION_FAILED
     elif any(s == STATUS_PROVIDER_UNREACHABLE for s in statuses):
         overall = STATUS_PROVIDER_UNREACHABLE
-    elif mode not in {"env", "auto"} and not configured:
+    elif mode not in {"env", "auto"} and not configured:  # noqa: SIM114 - one status rule per branch, kept separate for readability
         overall = STATUS_CREDENTIALS_NOT_CONFIGURED
-    elif (
+    elif (  # noqa: SIM114 - one status rule per branch, kept separate for readability
         mode == "auto"
         and isinstance(provider, EnvProvider)
         and all(

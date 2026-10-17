@@ -7,14 +7,14 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
 
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -32,7 +32,7 @@ DEFAULT_EVALUATION = (
 def load_examples(path: Path) -> list[dict[str, Any]]:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, list):
-        raise ValueError(f"examples must be a JSON list: {path}")
+        raise ValueError(f"examples must be a JSON list: {path}")  # noqa: TRY004 - invalid input data, not a programming error; callers handle ValueError
     return value
 
 

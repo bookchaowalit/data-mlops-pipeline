@@ -8,26 +8,25 @@ import json
 import sys
 import tempfile
 import threading
-import urllib.request
 import unittest
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from mlops.evaluate import evaluate_manifest  # noqa: E402
 from mlops.dataset import (
     DatasetContractError,
     load_dataset_contract,
     prepare_dataset_bundle,
-)  # noqa: E402
-from mlops.gold import materialize_gold_dataset  # noqa: E402
-from mlops.monitor import monitor_predictions  # noqa: E402
-from mlops.pipeline import run_pipeline  # noqa: E402
-from mlops.registry import register_model  # noqa: E402
-from mlops.serve import create_server  # noqa: E402
-from mlops.staging import staging_dry_run  # noqa: E402
-
+)
+from mlops.evaluate import evaluate_manifest
+from mlops.gold import materialize_gold_dataset
+from mlops.monitor import monitor_predictions
+from mlops.pipeline import run_pipeline
+from mlops.registry import register_model
+from mlops.serve import create_server
+from mlops.staging import staging_dry_run
 
 MODEL_ARTIFACT = ROOT / "mlops/artifacts/solo-empire-central-assistant/0.2.0/model.json"
 GOLD_MANIFEST = ROOT / "mlops/gold/synthetic-gold-v1/dataset-manifest.json"

@@ -12,12 +12,12 @@ from typing import Any
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 if __package__ in {None, ""}:  # pragma: no cover - direct CLI support
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from mlops.evaluate import evaluate_manifest
     from mlops.dataset import load_dataset_contract, prepare_dataset_bundle
+    from mlops.evaluate import evaluate_manifest
     from mlops.monitor import monitor_predictions
     from mlops.registry import register_model
     from mlops.staging import staging_dry_run

@@ -13,7 +13,7 @@ from urllib.parse import unquote, urlparse
 UTILS_DIR = Path(__file__).resolve().parent.parent / "utils"
 if str(UTILS_DIR) not in sys.path:
     sys.path.insert(0, str(UTILS_DIR))
-from _env import PROJECT_ROOT  # noqa: E402
+from _env import PROJECT_ROOT
 
 DATASET_CONTRACT = "solo-empire.mlops.dataset.v1"
 SUPPORTED_SUFFIXES = {".json", ".jsonl", ".ndjson", ".parquet"}
@@ -69,7 +69,7 @@ def _source_files(source: Path) -> list[Path]:
 
 def _read_parquet(path: Path) -> list[dict[str, Any]]:
     try:
-        import pyarrow.parquet as parquet  # type: ignore
+        from pyarrow import parquet  # type: ignore
     except ImportError as exc:
         raise DatasetContractError(
             "Parquet dataset reads require PyArrow; install "
