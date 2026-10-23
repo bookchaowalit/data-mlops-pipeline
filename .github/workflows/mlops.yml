@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: Run MLOps unit tests
-        run: python3 infra/tests/mlops/mlops_pipeline_test.py
+        run: for t in infra/tests/mlops/*_test.py; do python3 "$t" || exit 1; done
       - name: Evaluate central candidate release
         run: python3 infra/scripts/mlops/evaluate.py --json
       - name: Run local MLOps vertical slice
