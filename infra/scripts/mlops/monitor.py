@@ -53,8 +53,9 @@ def monitor_predictions(
     """Return a deterministic PSI-based drift report for prediction labels."""
     _validate_rows(current_rows, "current")
     _validate_rows(baseline_rows, "baseline")
-    if psi_threshold <= 0:
-        raise MonitoringError("psi threshold must be positive")
+    # NaN compares false with everything, so it would pass every run: fail closed instead.
+    if not math.isfinite(psi_threshold) or psi_threshold <= 0:
+        raise MonitoringError("psi threshold must be a positive finite number")
 
     baseline_distribution = _distribution(baseline_rows)
     current_distribution = _distribution(current_rows)
