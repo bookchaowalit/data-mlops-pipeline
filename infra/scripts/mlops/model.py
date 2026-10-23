@@ -10,16 +10,33 @@ from __future__ import annotations
 
 import json
 import math
-import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
-TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
 MODEL_FORMAT = "solo-empire.naive-bayes-json.v1"
 
 
+def _is_token_char(char: str) -> bool:
+    # A token is a run of letters/digits plus combining marks (category M). Thai vowel and
+    # tone marks are combining characters, which the old ``[^\W_]+`` pattern split on.
+    return char != "_" and (
+        char.isalnum() or unicodedata.category(char).startswith("M")
+    )
+
+
 def tokenize(text: str) -> list[str]:
-    return [token.casefold() for token in TOKEN_RE.findall(text)]
+    tokens: list[str] = []
+    current: list[str] = []
+    for char in text:
+        if _is_token_char(char):
+            current.append(char)
+        elif current:
+            tokens.append("".join(current).casefold())
+            current = []
+    if current:
+        tokens.append("".join(current).casefold())
+    return tokens
 
 
 def _validate_examples(
